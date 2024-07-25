@@ -6,7 +6,7 @@ using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using BlogAPI.Data;
-using BlogAPI.Models;
+using BlogAPI.Models.Domain.Concrete;
 
 namespace BlogAPI.Controllers
 {

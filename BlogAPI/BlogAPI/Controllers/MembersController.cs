@@ -6,7 +6,7 @@ using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using BlogAPI.Data;
-using BlogAPI.Models;
+using BlogAPI.Models.Domain.Concrete;
 
 namespace BlogAPI.Controllers
 {
@@ -53,7 +53,7 @@ namespace BlogAPI.Controllers
         // PUT: api/Members/5
         // To protect from overposting attacks, see https://go.microsoft.com/fwlink/?linkid=2123754
         [HttpPut("{id}")]
-        public async Task<IActionResult> PutMember(int id, Member member)
+        public async Task<IActionResult> PutMember(string id, Member member)
         {
             if (id != member.Id)
             {
@@ -62,21 +62,8 @@ namespace BlogAPI.Controllers
 
             _context.Entry(member).State = EntityState.Modified;
 
-            try
-            {
-                await _context.SaveChangesAsync();
-            }
-            catch (DbUpdateConcurrencyException)
-            {
-                if (!MemberExists(id))
-                {
-                    return NotFound();
-                }
-                else
-                {
-                    throw;
-                }
-            }
+            await _context.SaveChangesAsync();
+           
 
             return NoContent();
         }
@@ -116,7 +103,7 @@ namespace BlogAPI.Controllers
             return NoContent();
         }
 
-        private bool MemberExists(int id)
+        private bool MemberExists(string id)
         {
             return (_context.Members?.Any(e => e.Id == id)).GetValueOrDefault();
         }
