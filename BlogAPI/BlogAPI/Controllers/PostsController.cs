@@ -7,9 +7,12 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using BlogAPI.Data;
 using BlogAPI.Models.Domain.Concrete;
+using Microsoft.AspNetCore.Identity;
+using Microsoft.AspNetCore.Authorization;
 
 namespace BlogAPI.Controllers
 {
+    [Authorize(Roles = "Member")]
     [Route("api/[controller]")]
     [ApiController]
     public class PostsController : ControllerBase
@@ -19,6 +22,7 @@ namespace BlogAPI.Controllers
         public PostsController(ApplicationContext context)
         {
             _context = context;
+
         }
 
         // GET: api/Posts
@@ -95,6 +99,62 @@ namespace BlogAPI.Controllers
 
             return CreatedAtAction("GetPost", new { id = post.Id }, post);
         }
+
+        [HttpPost("AddComment")]
+        public async Task<ActionResult<Comment>> AddComment(int postid,Comment comment)
+        {
+
+            if (_context.Post == null)
+            {
+                return Problem("Entity set 'ApplicationContext.Comments'  is null.");
+            }
+
+            var post = await _context.Post
+                .Where(p => p.Id == postid)
+                .Include(p => p.Comments)
+                .FirstOrDefaultAsync();
+
+            _context.Comments!.Add(comment);
+            post.Comments!.Add(comment);
+            _context.Post.Update(post);
+
+            await _context.SaveChangesAsync();
+
+            return Ok();
+        }
+
+        [HttpPost("AddComment2Comment")]
+        public async Task<ActionResult<Comment>> AddComment2Comment(int commentedId, Comment comment)
+        {
+            // Check if Comments DbSet is null
+            if (_context.Comments == null)
+            {
+                return Problem("Entity set 'ApplicationContext.Comments' is null.");
+            }
+
+            // Retrieve the parent comment
+            var parentComment = await _context.Comments
+                .Where(c => c.Id == commentedId)
+                .FirstOrDefaultAsync();
+
+            if (parentComment == null)
+            {
+                return NotFound("Parent comment not found.");
+            }
+
+            // Set the parent comment ID on the new comment
+            comment.CommentReplyId = commentedId;
+
+            // Add the new comment to the context
+            _context.Comments.Add(comment);
+
+            // Save changes to the database
+            await _context.SaveChangesAsync();
+
+            // Return the created comment with a 201 Created status
+            return CreatedAtAction(nameof(AddComment2Comment), new { id = comment.Id }, comment);
+        }
+
 
         // DELETE: api/Posts/5
         [HttpDelete("{id}")]

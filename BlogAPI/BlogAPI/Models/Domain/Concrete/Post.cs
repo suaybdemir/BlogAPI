@@ -1,6 +1,7 @@
 ﻿using System;
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
+using System.Text.Json.Serialization;
 
 namespace BlogAPI.Models.Domain.Concrete
 {
@@ -9,22 +10,23 @@ namespace BlogAPI.Models.Domain.Concrete
         [Key]
         public int Id { get; set; }
 
+        [Required]
         public string AuthorId { get; set; }
-        public int? CommentId { get; set; }
 
-        [Range(0, 200)]
+
+        [StringLength(200)]
         public string Title { get; set; }
 
         public DateTime PublishDate { get; set; } = DateTime.Now;
 
-        [Range(0, 200000)]
+        [StringLength(200000)]
         public string Text { get; set; }
 
-        [ForeignKey(nameof(CommentId))]
         public List<Comment>? Comments { get; set; }
 
+        [JsonIgnore]
         [ForeignKey(nameof(AuthorId))]
-        public Member Author { get; set; }
+        public Member? Author { get; set; }
 
 
     }

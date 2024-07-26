@@ -6,8 +6,8 @@ namespace BlogAPI.Models.Domain.Concrete
 {
     public class ApplicationUser : IdentityUser
     {
-        [Key]
-        public string IdNumber { get; set; }
+        
+        public long? IdNumber { get; set; }
         public string Name { get; set; } = "";
         public string? MiddleName { get; set; }
         public string? FamilyName { get; set; }
@@ -18,7 +18,7 @@ namespace BlogAPI.Models.Domain.Concrete
         public byte Status { get; set; }
 
         [Range(0, 30000)]
-        public int NumberOfPosts { get; set; } = 0;
+        public int? NumberOfPosts { get; set; } = 0;
 
         [NotMapped]
         public string? Password { get; set; }

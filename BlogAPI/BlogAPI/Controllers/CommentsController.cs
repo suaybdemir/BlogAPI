@@ -7,9 +7,11 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using BlogAPI.Data;
 using BlogAPI.Models.Domain.Concrete;
+using Microsoft.AspNetCore.Authorization;
 
 namespace BlogAPI.Controllers
 {
+    [Authorize(Roles = "Member")]
     [Route("api/[controller]")]
     [ApiController]
     public class CommentsController : ControllerBase
@@ -83,18 +85,20 @@ namespace BlogAPI.Controllers
 
         // POST: api/Comments
         // To protect from overposting attacks, see https://go.microsoft.com/fwlink/?linkid=2123754
-        [HttpPost]
-        public async Task<ActionResult<Comment>> PostComment(Comment comment)
-        {
-          if (_context.Comments == null)
-          {
-              return Problem("Entity set 'ApplicationContext.Comments'  is null.");
-          }
-            _context.Comments.Add(comment);
-            await _context.SaveChangesAsync();
+        //[HttpPost]
+        //public async Task<ActionResult<Comment>> PostComment(Comment comment)
+        //{
+            
+        //  if (_context.Comments == null)
+        //  {
+        //      return Problem("Entity set 'ApplicationContext.Comments'  is null.");
+        //  }
+        //    _context.Comments.Add(comment);
+        //    await _context.SaveChangesAsync();
 
-            return CreatedAtAction("GetComment", new { id = comment.Id }, comment);
-        }
+        //    return CreatedAtAction("GetComment", new { id = comment.Id }, comment);
+        //}
+
 
         // DELETE: api/Comments/5
         [HttpDelete("{id}")]
@@ -105,15 +109,24 @@ namespace BlogAPI.Controllers
                 return NotFound();
             }
             var comment = await _context.Comments.FindAsync(id);
+
             if (comment == null)
             {
                 return NotFound();
             }
 
+            if(comment.CommentReplyId !=null)
+            {
+                int commentId = (int)comment.CommentReplyId;
+                comment.CommentReplyId = null;
+                var comment2 = await _context.Comments.FindAsync(commentId);
+                _context.Comments.Remove(comment2);
+            }
+            
             _context.Comments.Remove(comment);
             await _context.SaveChangesAsync();
 
-            return NoContent();
+            return Ok();
         }
 
         private bool CommentExists(int id)

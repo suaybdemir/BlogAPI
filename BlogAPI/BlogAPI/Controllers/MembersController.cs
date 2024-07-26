@@ -7,18 +7,23 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using BlogAPI.Data;
 using BlogAPI.Models.Domain.Concrete;
+using Microsoft.AspNetCore.Identity;
+using Microsoft.AspNetCore.Authorization;
 
 namespace BlogAPI.Controllers
 {
+   
     [Route("api/[controller]")]
     [ApiController]
     public class MembersController : ControllerBase
     {
         private readonly ApplicationContext _context;
+        private readonly UserManager<ApplicationUser> _userManager;
 
-        public MembersController(ApplicationContext context)
+        public MembersController(ApplicationContext context, UserManager<ApplicationUser> userManager)
         {
             _context = context;
+            _userManager = userManager;
         }
 
         // GET: api/Members
@@ -70,15 +75,35 @@ namespace BlogAPI.Controllers
 
         // POST: api/Members
         // To protect from overposting attacks, see https://go.microsoft.com/fwlink/?linkid=2123754
+        [AllowAnonymous]
         [HttpPost]
         public async Task<ActionResult<Member>> PostMember(Member member)
         {
-          if (_context.Members == null)
-          {
-              return Problem("Entity set 'ApplicationContext.Members'  is null.");
-          }
+            if (_context.Members == null)
+            {
+                return Problem("Entity set 'ApplicationContext.Members'  is null.");
+            }
+
+            _userManager.CreateAsync(member.ApplicationUser!, member.ApplicationUser!.Password).Wait();
+            _userManager.AddToRoleAsync(member.ApplicationUser, "Member").Wait();
+            member.Id = member.ApplicationUser!.Id;
+            member.ApplicationUser = null;
             _context.Members.Add(member);
-            await _context.SaveChangesAsync();
+            try
+            {
+                await _context.SaveChangesAsync();
+            }
+            catch (DbUpdateException)
+            {
+                if (MemberExists(member.Id))
+                {
+                    return Conflict();
+                }
+                else
+                {
+                    throw;
+                }
+            }
 
             return CreatedAtAction("GetMember", new { id = member.Id }, member);
         }

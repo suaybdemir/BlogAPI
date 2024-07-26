@@ -16,13 +16,14 @@ namespace BlogAPI.Models.Domain.Concrete
         [StringLength(5000)]
         public string Text { get; set; }
 
+        [Required]
         public string AuthorId { get; set; }
 
         [JsonIgnore]
         [ForeignKey(nameof(AuthorId))]
         public Member? Author { get; set; }
 
-        public List<Comment>? Comments { get; set; }
+        public int? CommentReplyId { get; set; }
 
     }
 }
